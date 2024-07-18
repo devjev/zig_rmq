@@ -1,15 +1,36 @@
 const std = @import("std");
+const c = @cImport({
+    @cInclude("rabbitmq-c/amqp.h");
+    @cInclude("rabbitmq-c/tcp_socket.h");
+});
 
-// rabbitmq-c declarations (minimal) =========================================
-pub const amqp_connection_state_struct = opaque {};
-pub const amqp_connection_state_t = ?*amqp_connection_state_struct;
-pub const amqp_socket_t = opaque {};
+const RmqError = error{
+    SocketError,
+};
 
-extern fn amqp_tcp_socket_new(state: amqp_connection_state_t) ?*amqp_socket_t;
-extern fn amqp_new_connection() amqp_connection_state_t;
-extern fn amqp_socket_open(self: ?*amqp_socket_t, host: [*c]const u8, port: c_int) c_int;
+const RmqConnection = struct {
+    conn: c.amqp_connection_state_t,
+    socket: ?*c.amqp_socket_t,
+};
+
+fn new_rmq_connection(hostname: []const u8, port: i32) RmqConnection {
+    const conn = c.amqp_new_connection();
+    const socket = c.amqp_tcp_socket_new(conn);
+
+    const port_c: c_int = @intCast(port);
+
+    return RmqConnection{
+        .conn = conn,
+        .socket = socket,
+    };
+}
+
+fn close_rmq_connection(rmq_conn: *const RmqConnection) void {
+    const conn = rmq_conn.conn;
+    _ = c.amqp_destroy_connection(conn);
+}
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    const conn = new_rmq_connection();
+    defer close_rmq_connection(&conn);
 }
