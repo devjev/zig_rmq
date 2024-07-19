@@ -2,12 +2,13 @@
 // =======
 //
 // Example code showing how to:
-// a) use system libraries written in C in a Zig project (in this case rabbitmq-c), and
+// a) use system libraries written in C in a Zig project
+//    (in this case rabbitmq-c), and
 // b) consume messages from RabbitMQ.
 //
 
 const std = @import("std");
-const lib = @import("lib");
+const lib = @import("lib.zig");
 
 pub fn main() !void {
     const alloc = std.heap.c_allocator;
