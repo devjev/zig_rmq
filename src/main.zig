@@ -1,11 +1,3 @@
-// zig_rmq
-// =======
-//
-// Example code showing how to:
-// a) use system libraries written in C in a Zig project (in this case rabbitmq-c), and
-// b) consume messages from RabbitMQ.
-//
-
 const std = @import("std");
 
 pub fn main() !void {
