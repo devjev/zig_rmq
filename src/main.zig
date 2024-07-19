@@ -1,4 +1,16 @@
+// zig_rmq
+// =======
+//
+// Example code showing how to:
+// a) use system libraries written in C in a Zig project (in this case rabbitmq-c), and
+// b) consume messages from RabbitMQ.
+//
+
 const std = @import("std");
+
+// @cImport is just like translate-c, but works transparently in your source code,
+// including if you link in a system library (like I am doing here), as it
+// automatically adds include and lib paths!
 const c = @cImport({
     @cInclude("rabbitmq-c/amqp.h");
     @cInclude("rabbitmq-c/tcp_socket.h");
@@ -8,29 +20,51 @@ const RmqError = error{
     SocketError,
 };
 
+// I am going to wrap all the details necessary for a connecting and logging in
+// with RabbitMQ in a single struct.
 const RmqConnection = struct {
+    alloc: *const std.mem.Allocator,
     conn: c.amqp_connection_state_t,
     socket: ?*c.amqp_socket_t,
+    hostname: [:0]const u8,
+    port: c_int,
+
+    pub fn init(
+        alloc: *const std.mem.Allocator,
+        hostname: []const u8,
+        port: i32,
+    ) !RmqConnection {
+        const hostname_cstr = try alloc.dupeZ(u8, hostname); // TODO handle the error?
+        const port_cint: c_int = @intCast(port);
+
+        const conn = c.amqp_new_connection();
+        const socket = c.amqp_tcp_socket_new(conn);
+
+        if (0 != c.amqp_socket_open(socket, hostname_cstr.ptr, port_cint)) {
+            return RmqError.SocketError;
+        }
+
+        return RmqConnection{
+            .alloc = alloc,
+            .conn = conn,
+            .socket = socket,
+            .hostname = hostname_cstr,
+            .port = port_cint,
+        };
+    }
+
+    pub fn deinit(self: *@This()) void {
+        // TODO deal with possible failure here
+        _ = c.amqp_connection_close(self.conn, c.AMQP_REPLY_SUCCESS);
+        _ = c.amqp_destroy_connection(self.conn);
+        self.alloc.free(self.hostname);
+    }
 };
 
-fn new_rmq_connection(hostname: []const u8, port: i32) RmqConnection {
-    const conn = c.amqp_new_connection();
-    const socket = c.amqp_tcp_socket_new(conn);
-
-    const port_c: c_int = @intCast(port);
-
-    return RmqConnection{
-        .conn = conn,
-        .socket = socket,
-    };
-}
-
-fn close_rmq_connection(rmq_conn: *const RmqConnection) void {
-    const conn = rmq_conn.conn;
-    _ = c.amqp_destroy_connection(conn);
-}
-
 pub fn main() !void {
-    const conn = new_rmq_connection();
-    defer close_rmq_connection(&conn);
+    const alloc = std.heap.c_allocator;
+    var rmq_conn = try RmqConnection.init(&alloc, "localhost", 5762);
+    defer rmq_conn.deinit();
+
+    std.debug.print("rmq_con = {any}", .{rmq_conn});
 }

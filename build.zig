@@ -16,4 +16,8 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary("librabbitmq");
 
     b.installArtifact(exe);
+
+    const run_exe = b.addRunArtifact(exe);
+    const run_step = b.step("run", "Run the example");
+    run_step.dependOn(&run_exe.step);
 }
