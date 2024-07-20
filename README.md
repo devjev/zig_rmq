@@ -3,7 +3,7 @@ Zig wrapper around rabbitmq-c
 
 Statically linked wrapper around [rabbitmq-c](https://github.com/alanxz/rabbitmq-c/tree/v0.14.0).
 
-> [!INFO]
+> [!TIP]
 > Build scripts are written for a Unix system. Not sure when I will get to
 > updating them to work on Windows as well.
 
