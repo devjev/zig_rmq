@@ -5,7 +5,7 @@ Statically linked wrapper around [rabbitmq-c](https://github.com/alanxz/rabbitmq
 
 > [!TIP]
 > Build scripts are written for a Unix system. Not sure when I will get to
-> updating them to work on Windows as well.
+> updating them to work on Windows.
 
 Dependencies
 ------------

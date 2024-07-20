@@ -1,5 +1,4 @@
 # Prepare the installation path.
-# We install into a project directory ext_libs
 rm -rf libs && mkdir libs
 pushd libs
 rm -rf librabbitmq && mkdir librabbitmq
