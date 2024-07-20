@@ -8,11 +8,11 @@
 //
 
 const std = @import("std");
-const lib = @import("lib.zig");
+const lib = @import("zig_rmq");
 
 pub fn main() !void {
     const alloc = std.heap.c_allocator;
-    var rmq_conn = try lib.RmqConnection.init(&alloc, "localhost", 5762);
+    var rmq_conn = try lib.RmqConnection.init(&alloc, "localhost", 5672);
     defer rmq_conn.deinit();
 
     std.debug.print("rmq_con = {any}", .{rmq_conn});

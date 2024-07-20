@@ -1,21 +1,26 @@
 Zig wrapper around rabbitmq-c
 =============================
 
-Small quality-of-life Zig wrapper around rabbitmq-c, which is linked as a
-systems library (i.e., not statically build and linked in).
+Statically linked wrapper around [rabbitmq-c](https://github.com/alanxz/rabbitmq-c/tree/v0.14.0).
 
-> [!WARNING]
-> I can't for the life of me figure out how to structure the project
-> into folders, while also linking in a system library without
-> hardcoding the include and library paths. Maybe something for
-> the future or when I have enough patience to build rabbitmq-c 
-> statically.
+> [!INFO]
+> Build scripts are written for a Unix system. Not sure when I will get to
+> updating them to work on Windows as well.
 
 Dependencies
 ------------
 
 - Zig 0.13
-- librabbitmq (i.e., rabbitmq-c)
+- CMake (to build rabbitmq-c)
+- OpenSSL (for OpenSSL support by rabbitmq-c)
+
+How to build
+------------
+
+1. Build the librabbitmq static library. This can be done via the corresponding
+   script: `$ sh build-rabbitmq.sh`. It is enough to do this once and the
+   results will be placed in the `libs/` directory.
+2. Run `$ zig build`.
 
 License
 -------
