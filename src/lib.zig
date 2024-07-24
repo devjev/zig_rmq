@@ -81,7 +81,7 @@ pub const LoginParams = struct {
     pub fn get_frame_max(self: *const @This()) i32 {
         switch (self.frame_max) {
             .max => |m| return m,
-            .auto => return 0,
+            .auto => return 131072, // 128kb by default
         }
     }
 

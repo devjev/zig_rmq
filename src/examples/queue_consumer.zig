@@ -22,7 +22,6 @@ pub fn main() !void {
                 .password = "demo",
             },
         },
-        .frame_max = .{ .max = 131072 },
     });
     defer conn.deinit();
 
