@@ -122,11 +122,11 @@ pub const Connection = struct {
 
         const socket = c.amqp_tcp_socket_new(conn);
         const socket_open_status = c.amqp_socket_open(socket, hostname_cstr.ptr, port_cint);
-        _ = switch (_handle_lib_status(socket_open_status)) {
+        switch (_handle_lib_status(socket_open_status)) {
+            .ok => {},
             .err => |err| return err.err_val,
-            .ok => void,
             .no_reply => unreachable,
-        };
+        }
 
         switch (login_params.auth) {
             .plain => |auth_params| {
@@ -135,7 +135,7 @@ pub const Connection = struct {
                 const password_cstr = try alloc.dupeZ(u8, auth_params.password);
                 defer alloc.free(password_cstr);
 
-                _ = c.amqp_login(
+                const login_reply = c.amqp_login(
                     conn,
                     vhost_cstr,
                     channel_max_cint,
@@ -145,6 +145,11 @@ pub const Connection = struct {
                     username_cstr.ptr,
                     password_cstr.ptr,
                 );
+                switch (_handle_rpc_reply(&login_reply)) {
+                    .ok => {},
+                    .err => |err| return err.err_val,
+                    .no_reply => unreachable,
+                }
             },
             else => {
                 @panic("External authentication method not implemented yet");
@@ -178,16 +183,10 @@ pub const Channel = struct {
     channel: u16,
 
     pub fn init(conn: *const Connection, channel: u16) !Channel {
-        if (0 != c.amqp_channel_open(conn.conn, channel)) {
-            return AppError.channel_open_err;
-        }
-
+        _ = c.amqp_channel_open(conn.conn, channel);
         switch (get_rpc_reply(conn)) {
             .ok => {},
-            .err => |err| {
-                std.debug.print("{any}\n", .{err});
-                return err.err_val;
-            },
+            .err => |err| return err.err_val,
             else => {},
         }
 
