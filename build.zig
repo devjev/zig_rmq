@@ -24,10 +24,14 @@ pub fn build(b: *std.Build) void {
 
     const consumer_exe = b.addExecutable(.{
         .name = "queue_consumer",
-        .root_source_file = b.path("src/queue_consumer.zig"),
+        .root_source_file = b.path("src/examples/queue_consumer.zig"),
         .target = target,
         .optimize = optimize,
     });
     consumer_exe.root_module.addImport("zig_rmq", lib_mod);
     b.installArtifact(consumer_exe);
+
+    const run_consumer_exe = b.addRunArtifact(consumer_exe);
+    const run_consumer_step = b.step("run-consumer", "Run the queue consumer example");
+    run_consumer_step.dependOn(&run_consumer_exe.step);
 }
