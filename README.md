@@ -1,11 +1,14 @@
 Zig wrapper around rabbitmq-c
 =============================
 
-Statically linked wrapper around [rabbitmq-c](https://github.com/alanxz/rabbitmq-c/tree/v0.14.0).
+Statically linked wrapper around [rabbitmq-c](https://github.com/alanxz/rabbitmq-c/tree/v0.14.0)
+with a comfortable Zig interface.
 
-> [!TIP]
-> Build scripts are written for a Unix system. Not sure when I will get to
-> updating them to work on Windows.
+> [!WARNING]
+> Library is still work in progress. Most of it is incomplete. Read the code 
+> and try it out, if you are looking for ideas how to use rabbitmq-c in your
+> Zig projects, but don't use this for anything else.
+
 
 Dependencies
 ------------
@@ -14,6 +17,7 @@ Dependencies
 - CMake (to build rabbitmq-c)
 - OpenSSL (for OpenSSL support by rabbitmq-c)
 
+
 How to build
 ------------
 
@@ -21,6 +25,67 @@ How to build
    script: `$ sh build-rabbitmq.sh`. It is enough to do this once and the
    results will be placed in the `libs/` directory.
 2. Run `$ zig build`.
+
+
+Lessons learned so far
+----------------------
+
+### Zig has a huge ecosystem
+
+Zig's ability to seamlessly integrate C projects (or even any project that can
+be compiled to a static library for that matter) is a **superpower**. Especially 
+`zig translate-c` is very helpful to understand how the C project fits into the
+Zig world.
+
+A few points that I learned for myself.
+
+- Linking in system libraries is currently difficult. I couldn't figure out how
+  to properly do it, if the source file with the `main` function is anywhere
+  other than in [src/](src/). I couldn't get the include and lib paths to be 
+  recognized when the main file was in a subpath in of [src/](src/), for 
+  example.
+- The best way to include a C/C++/Fortran/etc. project in your Zig project is to
+  `git submodule` it, build it as a static library and `@cImport(...)` it. Of
+  course this would require you actually reading the project's readme and
+  figuring out how to build it properly and where the includes and libs are in
+  the end. For an example of how I did it with [rabbitmq-c]() see
+  [build-rabbitmq.sh](build-rabbitmq.sh). 
+- Even though the integration is seamless, the APIs of the imported C project
+  are still C APIs. This means that the approach how the code is structured and 
+  how memory management is handled will be different to that of Zig and you will 
+  likely spend some time writing wrapper code to make it more convenient to use.
+  This repo being a case in point.
+
+### Building it
+
+See [build.zig](build.zig) for details on how to ensure the static library is
+properly included.
+
+### Ownership, not a straitjacket
+
+Getting your program to handle resources (like memory) nicely is surprisingly 
+easy in Zig, without having to fight the borrow checker, clone everyting or 
+nest boxes.
+
+
+See [src/lib.zig](src/lib.zig):
+
+```zig
+pub const Connection = struct {
+    alloc: *const std.mem.Allocator, // keep a pointer to the allocator here
+    conn: c.amqp_connection_state_t,
+    socket: ?*c.amqp_socket_t,
+    hostname: [:0]const u8,
+
+    // ...
+    
+    pub fn deinit(self: *const @This()) void {
+        // (some code before)
+        self.alloc.free(self.hostname); // use it to deallocate at deinit
+    }
+};
+```
+
 
 License
 -------
