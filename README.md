@@ -112,8 +112,12 @@ Getting your program to handle resources (like memory) nicely is surprisingly
 easy in Zig. Especially compared to Rust, where you have to fight the borrow 
 checker, clone everyting or do box gymnastics of arbitrary depth.
 
+I love how in Zig you naturally find a pattern that is understandable, practical
+and efficient. For example, by storing a pointer to an allocator in a struct to
+allocate and free memory in the context of that struct, I effectively create a
+context of ownership. And I don't need to know Haskell to get it right!
 
-See [src/lib.zig](src/lib.zig):
+See [src/lib.zig](src/lib.zig) for an example of what I mean:
 
 ```zig
 pub const Connection = struct {
@@ -131,6 +135,20 @@ pub const Connection = struct {
 };
 ```
 
+The code above is stupidly simple, but the implications are massive: central and
+**customizeable** memory allocation context, which, when paired with `defer` and
+`errdefer` gives you the tools to create safe and **maintainable** software.
+
+### Zig is an emergent language
+
+By which I mean that its strengths and capabilities emerge from the combination
+of the simple and orthogonal features of the language. For example, Zig does not
+have interfaces, but a common pattern is to pass `*const std.mem.Allocator` to a
+function, which acts as a de facto interface. How is that possible?
+
+This is achieved via dependency injection and compile-time introspection: two
+orthogonal features of the language which together give you the ability to
+create your own interfaces or similar constructs.
 
 License
 -------
