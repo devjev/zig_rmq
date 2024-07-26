@@ -4,61 +4,27 @@ const c = @cImport({
     @cInclude("rabbitmq-c/tcp_socket.h");
 });
 
-// Errors ====================================================================
-
-pub const AppError = error{
-    socket_err,
-    channel_open_err,
-};
-
-pub const LibRabbitMqError = error{
-    no_memory,
-    bad_amqp_data,
-    unknown_class,
-    unknown_method,
-    host_not_resolved,
-    incompatible_amqp_version,
-    conn_closed,
-    bad_url,
-    socket_err,
-    invalid_param,
-    table_too_big,
-    wrong_method,
-    timeout,
-    timer_failure,
-    heartbeat_timeout,
-    unexpected_state,
-    socket_closed,
-    socket_in_use,
-    broker_unsupported_sasl_method,
-    unsupported,
-    tcp_error,
-    tcp_socketlib_init_err,
-    ssl_err,
-    ssl_host_verify_failed,
-    ssl_peer_verify_err,
-    ssl_conn_err,
-    ssl_set_engine_err,
-    ssl_unimplemented,
-};
-
-pub const ServerError = error{};
-
 // Login params ==============================================================
 
 pub const ParamMax = enum { auto, max };
 
 pub const ChannelMax = union(ParamMax) { auto: void, max: i32 };
+
+// Size of a frame exchanged with the RabbitMQ server.
+// Minimal size is 4096 bytes, maximum is 2^31-1 bytes.
 pub const FrameMax = union(ParamMax) { auto: void, max: i32 };
 
 pub const HeartbeatTag = enum { off, seconds };
+
 pub const Heartbeat = union(HeartbeatTag) { off: void, seconds: i32 };
 
 pub const SaslMethodTag = enum { plain, external };
+
 pub const SaslPlainParams = struct {
     username: []const u8,
     password: []const u8,
 };
+
 pub const SaslMethod = union(SaslMethodTag) {
     plain: SaslPlainParams,
     external: void, // TODO Implement this
@@ -111,8 +77,8 @@ pub const Connection = struct {
         port: i32,
         login_params: LoginParams,
     ) !Connection {
-        const hostname_cstr = try alloc.dupeZ(u8, hostname); // TODO handle the error?
-        const vhost_cstr = try alloc.dupeZ(u8, login_params.vhost);
+        const hostname_cstr = try alloc.dupeZ(u8, hostname); // included in the struct and freed during deinit.
+        const vhost_cstr = try alloc.dupeZ(u8, login_params.vhost); // included in the struct and freed during deinit.
         const port_cint: c_int = @intCast(port);
         const channel_max_cint: c_int = @intCast(login_params.get_channel_max());
         const frame_max_cint: c_int = @intCast(login_params.get_frame_max());
@@ -152,6 +118,7 @@ pub const Connection = struct {
                 }
             },
             else => {
+                // TODO this still needs to be implemented.
                 @panic("External authentication method not implemented yet");
             },
         }
@@ -290,6 +257,48 @@ pub const Exchange = struct {
         self.exchange_type.deinit();
     }
 };
+
+// Errors ====================================================================
+
+pub const AppError = error{
+    socket_err,
+    channel_open_err,
+};
+
+pub const LibRabbitMqError = error{
+    no_memory,
+    bad_amqp_data,
+    unknown_class,
+    unknown_method,
+    host_not_resolved,
+    incompatible_amqp_version,
+    conn_closed,
+    bad_url,
+    socket_err,
+    invalid_param,
+    table_too_big,
+    wrong_method,
+    timeout,
+    timer_failure,
+    heartbeat_timeout,
+    unexpected_state,
+    socket_closed,
+    socket_in_use,
+    broker_unsupported_sasl_method,
+    unsupported,
+    tcp_error,
+    tcp_socketlib_init_err,
+    ssl_err,
+    ssl_host_verify_failed,
+    ssl_peer_verify_err,
+    ssl_conn_err,
+    ssl_set_engine_err,
+    ssl_unimplemented,
+};
+
+// TODO Wrapper for server errors returned by librabbitmq need
+//      to be ziggified here.
+pub const ServerError = error{};
 
 // Integration ===============================================================
 
