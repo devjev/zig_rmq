@@ -58,9 +58,11 @@ A few points that I learned for myself.
 
 ### Building it
 
-See [build.zig](build.zig) for details on how to ensure the static library is
-properly included. The neat way to do it (as far as I can tell at this point) 
-is:
+> [!TIP]
+> Before proceeding with the below steps, make sure you run 
+> [build-rabbitmq.sh](build-rabbitmq.sh).
+
+The cleanest approach in my opinion is as follows:
 
 #### 1. Define your library modules separately
 
@@ -83,7 +85,7 @@ lib_mod.addObjectFile(b.path("libs/librabbitmq/lib/librabbitmq.a"));
 Of course, this requires for the the above paths and files to be there. My
 preferred way of doing this, is having a dedicated (and gitignored) directory in
 project root where the static builds are installed (as you can see in
-[build-rabbitmq.sh](build-rabbitmq.sh):
+[build-rabbitmq.sh](build-rabbitmq.sh)):
 
 ```sh 
 # prefix is <project root>/libs
