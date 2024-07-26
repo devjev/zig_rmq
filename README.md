@@ -80,6 +80,17 @@ lib_mod.addLibraryPath(b.path("libs/librabbitmq/lib"));
 lib_mod.addObjectFile(b.path("libs/librabbitmq/lib/librabbitmq.a"));
 ```
 
+Of course, this requires for the the above paths and files to be there. My
+preferred way of doing this, is having a dedicated (and gitignored) directory in
+project root where the static builds are installed (as you can see in
+[build-rabbitmq.sh](build-rabbitmq.sh):
+
+```sh 
+# prefix is <project root>/libs
+cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" ..
+cmake --build . --config Release --target install
+```
+
 #### 3. Add the module created in (1) to the executable you want to produce
 
 ```zig
