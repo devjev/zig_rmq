@@ -141,13 +141,13 @@ The code above is stupidly simple, but the implications are massive: central and
 
 ### Zig is an emergent language
 
-By which I mean that its strengths and capabilities emerge from the combination
+By which I mean that its strengths emerge from the combination
 of the simple and orthogonal features of the language. For example, Zig does not
 have interfaces, but a common pattern is to pass `*const std.mem.Allocator` to a
-function, which acts as a de facto interface. How is that possible?
+function, which acts as a de facto interface.
 
 This is achieved via dependency injection and compile-time introspection: two
-orthogonal features of the language which together give you the ability to
+independent features of the language which together give you the ability to
 create your own interfaces or similar constructs.
 
 License
